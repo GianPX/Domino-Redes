@@ -166,16 +166,28 @@ while not game_over:
 
     # draw the board
     for i, domino in enumerate(board):
-        x = 350 - i * 50
+        x = 350+(len(board)-1)*25 - i * 50
         y = 300
         pygame.draw.rect(screen, WHITE, (x, y, 40, 60))
         pygame.draw.rect(screen, BLACK, (x, y, 40, 60), 2)
         text = font.render(f"{domino[1]}-{domino[0]}", True, BLACK)
         screen.blit(text, (x + 5, y + 5))
 
+    winLabel = font.render("GANASTE!!!",True,(255,255,255))
+    loseLabel = font.render("PERDISTE...",True,(255,25,255))
+
+    if len(player_hand) ==0:
+        screen.blit(winLabel,(350,30))
+        game_over = True
+    if len(computer_hand) ==0:
+        screen.blit(loseLabel,(350,30))
+        game_over = True
+
+    
     # update the display
     pygame.display.update()
 
+    #Receive game information
     if not turn:
         text=read()
         if text == 'your turn':
@@ -211,4 +223,4 @@ while not game_over:
     clock.tick(60)
 
 # quit Pygame
-pygame.quit()
+#pygame.quit()
