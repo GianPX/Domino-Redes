@@ -49,6 +49,7 @@ random.shuffle(dominoes)
 player_hand = dominoes[:7]
 computer_hand = dominoes[7:14]
 board = [dominoes[14]]
+dominoes = dominoes[15:28]
 
 turn = bool
 
