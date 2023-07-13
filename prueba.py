@@ -15,17 +15,16 @@ def read():
 
 def writeAll():
     write('b',board)
-    write('u',player1_hand)
-    write('d',player2_hand)
-    write('t',player3_hand)
-    write('c',player4_hand)
+    write('d',dominoes)
+    write('p',player_hand)
+    write('c',computer_hand)
 
 # initialize Pygame
 pygame.init()
 
 # set up the display
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Dominoes")
 
@@ -47,67 +46,64 @@ for i in range(7):
         dominoes.append((i, j))
 
 random.shuffle(dominoes)
-player1_hand = dominoes[:7]
-player2_hand = dominoes[7:14]
-player3_hand = dominoes[14:21]
-player4_hand = dominoes[21:28]
-board = []
+player_hand = dominoes[:7]
+computer_hand = dominoes[7:14]
+board = [dominoes[14]]
+dominoes = dominoes[15:28]
+print(json.dumps(player_hand))
 
-turn = bool
 yourScore = 0
 rivalScore = 0
+turn = bool
 
 #set up Serial Conection
-ser = serial.Serial()
+'''ser = serial.Serial()
 ser.baudrate = 9600
 ser.timeout = 0.1
 ser.port = input('Ingrese el nombre del puerto serial: ')
 ser.open()
-playerNumber = input('Ingrese el número del jugador (1/2/3/4): ')
+playerNumber = input('Ingrese el número del jugador (1/2): ')
 
 #Set up game
 if playerNumber == '1':
-    print('Esperando jugadores...')
+    print('Esperando jugador 2...')
     ready = False
-    writeAll()
     while not ready:
+        writeAll()
         readyText=read()
         if readyText == 'ready':
             ready=True
             print('Empieza el juego')
     turn = True
-
-else:
-    player1_handReady = False
-    player2_handReady = False
-    player3_handReady = False
-    player4_handReady = False
+elif playerNumber == '2':
+    dominoesReady = False
+    boardReady = False
+    player_handReady = False
+    computer_handReady = False
     ready = False
     while not ready:
         text=read()
         match text[0]:
-            case 'u':
-                text=text.replace('u','')
-                player4_hand=json.loads(text)
-                player4_handReady = True
+            case 'b':
+                text=text.replace('b','')
+                board=json.loads(text)
+                boardReady = True
             case 'd':
                 text=text.replace('d','')
-                player1_hand=json.loads(text)
-                player1_handReady = True
-            case 't':
-                text=text.replace('t','')
-                player2_hand=json.loads(text)
-                player2_handReady = True
+                dominoes=json.loads(text)
+                dominoesReady = True
+            case 'p':
+                text=text.replace('p','')
+                computer_hand=json.loads(text)
+                computer_handReady=True
             case 'c':
                 text=text.replace('c','')
-                player3_hand=json.loads(text)
-                player3_handReady = True
-        if player1_handReady and player2_handReady and player3_handReady and player4_handReady:
+                player_hand=json.loads(text)
+                player_handReady=True
+        if boardReady and dominoesReady and player_handReady and computer_handReady:
             ready=True
             writeText('ready')
-            writeAll()
-    turn = False
-
+    turn = False'''
 # set up the game loop
 clock = pygame.time.Clock()
 game_over = False
@@ -121,53 +117,43 @@ while not game_over:
             if turn:
                 # check if the user clicked on a domino in their hand
                 pos = pygame.mouse.get_pos()
-                for i, domino in enumerate(player1_hand):
+                for i, domino in enumerate(player_hand):
                     x = 150 + i * 50
                     y = 450
                     if x <= pos[0] <= x + 40 and y <= pos[1] <= y + 60:
                         # check if the domino can be placed on the board
-                        if len(board) == 0:
+                        if domino[0] == board[-1][1]:
                             board.append(domino)
-                            player1_hand.remove(domino)
-                            writeText('your turn')
-                            writeAll()
-                            turn = False
-                        elif domino[0] == board[-1][1]:
-                            board.append(domino)
-                            player1_hand.remove(domino)
+                            player_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
                             turn = False
                         elif domino[1] == board[-1][1]:
                             board.append((domino[1], domino[0]))
-                            player1_hand.remove(domino)
+                            player_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
                             turn = False
                         elif domino[0] == board[0][0]:
                             board.insert(0, (domino[1], domino[0]))
-                            player1_hand.remove(domino)
+                            player_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
                             turn = False
                         elif domino[1] == board[0][0]:
                             board.insert(0, domino)
-                            player1_hand.remove(domino)
+                            player_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
                             turn = False
-                if passButton.collidepoint(pos):
-                    writeText('your turn')
-                    writeAll()
-                    turn = False
 
     # draw the board
     screen.fill(GREEN)
     pygame.draw.rect(screen, BLACK, (100, 100, 600, 400), 2)
     pygame.draw.rect(screen, BLACK, (150, 150, 500, 300), 2)
 
-    # draw the player1's hand
-    for i, domino in enumerate(player1_hand):
+    # draw the player's hand
+    for i, domino in enumerate(player_hand):
         x = 150 + i * 50
         y = 450
         pygame.draw.rect(screen, WHITE, (x, y, 40, 60))
@@ -175,65 +161,68 @@ while not game_over:
         text = font.render(f"{domino[0]}-{domino[1]}", True, BLACK)
         screen.blit(text, (x + 5, y + 5))
 
-    # draw the player2's hand
-    for i, domino in enumerate(player2_hand):
-        x = 650
-        y = 150 + i * 42
-        pygame.draw.rect(screen, WHITE, (x, y, 60, 40))
-        pygame.draw.rect(screen, BLACK, (x, y, 60, 40), 2)
-
-    # draw the player3's hand
-    for i, domino in enumerate(player3_hand):
+    # draw the computer's hand
+    for i, domino in enumerate(computer_hand):
         x = 150 + i * 50
         y = 90
         pygame.draw.rect(screen, WHITE, (x, y, 40, 60))
         pygame.draw.rect(screen, BLACK, (x, y, 40, 60), 2)
 
-    # draw the player4's hand
-    for i, domino in enumerate(player4_hand):
-        x = 90
-        y = 150 + i * 42
-        pygame.draw.rect(screen, WHITE, (x, y, 60, 40))
-        pygame.draw.rect(screen, BLACK, (x, y, 60, 40), 2)
-
     # draw the board
-    if len(board)>0:
-        for i, domino in enumerate(board):
-            x = 350+(len(board)-1)*40 - i * 50
-            y = 300
-            pygame.draw.rect(screen, WHITE, (x, y, 40, 60))
-            pygame.draw.rect(screen, BLACK, (x, y, 40, 60), 2)
-            text = font.render(f"{domino[1]}-{domino[0]}", True, BLACK)
-            screen.blit(text, (x + 5, y + 5))
+    for i, domino in enumerate(board):
+        x = 350+(len(board)-1)*25 - i * 50
+        y = 300
+        pygame.draw.rect(screen, WHITE, (x, y, 40, 60))
+        pygame.draw.rect(screen, BLACK, (x, y, 40, 60), 2)
+        text = font.render(f"{domino[1]}-{domino[0]}", True, BLACK)
+        screen.blit(text, (x + 5, y + 5))
 
-    passText = font.render('Pasar',True,BLACK)
-    passButton = pygame.Rect(650,520,100,50)
-    pygame.draw.rect(screen,WHITE,passButton)
-    pygame.draw.rect(screen,BLACK,passButton,2)
-    screen.blit(passText,(668,535))
+    winLabel = font.render("GANASTE!!!",True,WHITE)
+    loseLabel = font.render("PERDISTE...",True,WHITE)
 
-    #Win and lose labels
-    winLabel = font.render("GANASTE!!!",True,(255,255,255))
-    loseLabel = font.render("PERDISTE...",True,(255,25,255))
-
-    #Check game over
-    if len(player1_hand) ==0:
+    if len(player_hand) ==0:
         screen.blit(winLabel,(350,30))
         game_over = True
-    if len(player3_hand) ==0:
-        screen.blit(winLabel,(350,30))
-        game_over = True
-    if len(player2_hand) ==0:
-        screen.blit(loseLabel,(350,30))
-        game_over = True
-    if len(player4_hand) ==0:
+    if len(computer_hand) ==0:
         screen.blit(loseLabel,(350,30))
         game_over = True
 
+    
     yourScoreText = font.render('Tus puntos: '+str(yourScore),True,BLACK)
     rivalScoreText = font.render('Puntos del rival: '+str(yourScore),True,BLACK)
     screen.blit(yourScoreText,(600,10))
     screen.blit(rivalScoreText,(600,30))
+
+    #Restart window
+    window = pygame.Rect(250,200,300,150)
+    restartButton = pygame.Rect(275,275,100,50)
+    quitButton = pygame.Rect(425,275,100,50)
+    pygame.draw.rect(screen,WHITE,window)
+    pygame.draw.rect(screen,BLUE,window,2)
+    pygame.draw.rect(screen,BLUE,restartButton)
+    pygame.draw.rect(screen,RED,quitButton)
+    restartText = font.render('Desea jugar otra ronda?',True,BLACK)
+    yesText = font.render('Si',True,WHITE)
+    noText = font.render('NO',True,WHITE)
+    screen.blit(restartText,(275,210))
+    screen.blit(yesText,(310,290))
+    screen.blit(noText,(460,290))
+
+    #Pass button
+    passText = font.render('Pasar',True,BLACK)
+    draftText = font.render('Robar',True,BLACK)
+    passButton = pygame.Rect(650,520,100,50)
+    pygame.draw.rect(screen,WHITE,passButton)
+    pygame.draw.rect(screen,BLACK,passButton,2)
+    screen.blit(draftText,(668,535))
+
+    for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Comprobar si se ha hecho clic en el botón
+            if restartButton.collidepoint(event.pos):
+                print("Yes!")
+            elif quitButton.collidepoint(event.pos):
+                print("No!")
 
     # update the display
     pygame.display.update()
@@ -241,15 +230,11 @@ while not game_over:
     #Receive game information
     if not turn:
         text=read()
-        if text == 'your turn' or text == 'update':
-            
-            if text == 'your turn': 
-                turn=True
-            player1_handReady = False
-            player2_handReady = False
-            player3_handReady = False
-            player4_handReady = False
+        if text == 'your turn':
+            dominoesReady = False
             boardReady = False
+            player_handReady = False
+            computer_handReady = False
             ready = False
             while not ready:
                 text=read()
@@ -258,26 +243,21 @@ while not game_over:
                         text=text.replace('b','')
                         board=json.loads(text)
                         boardReady = True
-                    case 'u':
-                        text=text.replace('u','')
-                        player4_hand=json.loads(text)
-                        player4_handReady = True
                     case 'd':
                         text=text.replace('d','')
-                        player1_hand=json.loads(text)
-                        player1_handReady = True
-                    case 't':
-                        text=text.replace('t','')
-                        player2_hand=json.loads(text)
-                        player2_handReady = True
+                        dominoes=json.loads(text)
+                        dominoesReady = True
+                    case 'p':
+                        text=text.replace('p','')
+                        computer_hand=json.loads(text)
+                        computer_handReady=True
                     case 'c':
                         text=text.replace('c','')
-                        player3_hand=json.loads(text)
-                        player3_handReady = True
-                if player1_handReady and player2_handReady and player3_handReady and player4_handReady and boardReady:
-                    ready=True
-                    writeText('update')
-                    writeAll()
+                        player_hand=json.loads(text)
+                        player_handReady=True
+                if boardReady and dominoesReady and player_handReady and computer_handReady:
+                    ready = True
+                    turn=True
 
     # limit the frame rate
     clock.tick(60)
