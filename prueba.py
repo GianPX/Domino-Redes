@@ -50,7 +50,6 @@ player_hand = dominoes[:7]
 computer_hand = dominoes[7:14]
 board = [dominoes[14]]
 dominoes = dominoes[15:28]
-print(json.dumps(player_hand))
 
 yourScore = 0
 rivalScore = 0
