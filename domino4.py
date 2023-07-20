@@ -53,18 +53,22 @@ player3_hand = dominoes[14:21]
 player4_hand = dominoes[21:28]
 board = []
 
+#Variables
 turn = bool
 yourScore = 0
 rivalScore = 0
 gameWin = False
 gameLose = False
+gameDraw = False
 round = 0
+contPass = 0
 
 #set up Serial Conection
 ser = serial.Serial()
 ser.baudrate = 9600
 ser.timeout = 0.1
-ser.port = input('Ingrese el nombre del puerto serial: ')
+#ser.port = input('Ingrese el nombre del puerto serial: ')
+ser.port = 'COM1'
 ser.open()
 playerNumber = input('Ingrese el número del jugador (1/2/3/4): ')
 
@@ -136,6 +140,7 @@ while not game_over:
                             writeAll()
                             round+=1
                             turn = False
+                            contPass = 0
                         elif domino[0] == board[-1][1]:
                             board.append(domino)
                             player1_hand.remove(domino)
@@ -143,6 +148,7 @@ while not game_over:
                             writeAll()
                             round+=1
                             turn = False
+                            contPass = 0
                         elif domino[1] == board[-1][1]:
                             board.append((domino[1], domino[0]))
                             player1_hand.remove(domino)
@@ -150,6 +156,7 @@ while not game_over:
                             writeAll()
                             round+=1
                             turn = False
+                            contPass = 0
                         elif domino[0] == board[0][0]:
                             board.insert(0, (domino[1], domino[0]))
                             player1_hand.remove(domino)
@@ -157,6 +164,7 @@ while not game_over:
                             writeAll()
                             round+=1
                             turn = False
+                            contPass = 0
                         elif domino[1] == board[0][0]:
                             board.insert(0, domino)
                             player1_hand.remove(domino)
@@ -164,13 +172,17 @@ while not game_over:
                             writeAll()
                             round+=1
                             turn = False
+                            contPass = 0
                 #Pass button logic
                 if passButton.collidepoint(pos):
+                    contPass+=1
+                    writeText('pass')
+                    writeText(str(contPass))
                     writeText('your turn')
                     writeAll()
                     turn = False
                 #Restart Logic
-                if (gameLose or gameWin) and restartButton.collidepoint(pos):
+                if (gameLose or gameWin or gameDraw) and restartButton.collidepoint(pos):
                     #count points
                     acum=0
                     if gameWin:
@@ -206,9 +218,10 @@ while not game_over:
                     writeAll()
                     turn = False
                     gameWin = False
-                    gameLose = False 
+                    gameLose = False
+                    gameDraw = False 
                 #quit logic                   
-                if (gameLose or gameWin) and quitButton.collidepoint(pos):
+                if (gameLose or gameWin or gameDraw) and quitButton.collidepoint(pos):
                     game_over = True
                     pygame.quit()
 
@@ -257,6 +270,7 @@ while not game_over:
             text = font.render(f"{domino[1]}-{domino[0]}", True, BLACK)
             screen.blit(text, (x + 5, y + 5))
 
+    #Pass button
     passText = font.render('Pasar',True,BLACK)
     passButton = pygame.Rect(650,520,100,50)
     pygame.draw.rect(screen,WHITE,passButton)
@@ -267,21 +281,30 @@ while not game_over:
     winLabel = font.render("GANASTE!!!",True,(255,255,255))
     loseLabel = font.render("PERDISTE...",True,(255,25,255))
 
-    #Check game over
+    #Check if win
     if len(player1_hand)==0 or len(player3_hand)==0:
         screen.blit(winLabel,(350,30))
         gameWin = True
-    if len(player2_hand) ==0 or len(player4_hand):
+    if len(player2_hand) ==0 or len(player4_hand)==0:
         screen.blit(loseLabel,(350,30))
-        gameLose = False
+        gameLose = True
 
+    #show scores
     yourScoreText = font.render('Tus puntos: '+str(yourScore),True,BLACK)
     rivalScoreText = font.render('Puntos del rival: '+str(yourScore),True,BLACK)
     screen.blit(yourScoreText,(600,10))
     screen.blit(rivalScoreText,(600,30))
 
+    #restart window
+    window = pygame.Rect(250,200,300,150)
+    restartButton = pygame.Rect(275,275,100,50)
+    quitButton = pygame.Rect(425,275,100,50)
+    restartText = font.render('Desea jugar otra ronda?',True,BLACK)
+    yesText = font.render('Si',True,WHITE)
+    noText = font.render('NO',True,WHITE)
+
     #show restart window
-    if gameWin or gameLose:  
+    if gameWin or gameLose or gameDraw:  
         pygame.draw.rect(screen,WHITE,window)
         pygame.draw.rect(screen,BLUE,window,2)
         pygame.draw.rect(screen,BLUE,restartButton)
@@ -333,7 +356,11 @@ while not game_over:
                     ready=True
                     writeText('update'+str(round))
                     writeAll()
-
+        elif text=="pass":
+            text=read()
+            contPass=int(text)
+            if contPass==4:
+                gameDraw = True
     # limit the frame rate
     clock.tick(60)
 
