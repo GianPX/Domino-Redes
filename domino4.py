@@ -62,6 +62,7 @@ gameLose = False
 gameDraw = False
 round = 0
 contPass = 0
+countPossiblePlays = 0
 
 #set up Serial Conection
 ser = serial.Serial()
@@ -134,6 +135,9 @@ while not game_over:
                     if x <= pos[0] <= x + 40 and y <= pos[1] <= y + 60:
                         # check if the domino can be placed on the board
                         if len(board) == 0:
+                            
+                            
+                            
                             board.append(domino)
                             player1_hand.remove(domino)
                             writeText('your turn')
@@ -142,6 +146,9 @@ while not game_over:
                             turn = False
                             contPass = 0
                         elif domino[0] == board[-1][1]:
+                            
+                            countPossiblePlays += 1;
+                            
                             board.append(domino)
                             player1_hand.remove(domino)
                             writeText('your turn')
@@ -166,6 +173,19 @@ while not game_over:
                             turn = False
                             contPass = 0
                         elif domino[1] == board[0][0]:
+                            board.insert(0, domino) #Estos inserts se eliminarian CREO para que no inserte el domino
+                            player1_hand.remove(domino)
+                            writeText('your turn')
+                            writeAll()
+                            round+=1
+                            turn = False
+                            contPass = 0
+                            
+                    #Luego de chequear iria aqui la logica de insertarlo
+                    
+                    
+                    
+                    #PlayRright Button Logic 
                             board.insert(0, domino)
                             player1_hand.remove(domino)
                             writeText('your turn')
@@ -173,6 +193,11 @@ while not game_over:
                             round+=1
                             turn = False
                             contPass = 0
+                    #Si esta bien es lo mismo para PlayLeft
+                    
+                    
+                    
+                    
                 #Pass button logic
                 if passButton.collidepoint(pos):
                     contPass+=1
@@ -276,6 +301,20 @@ while not game_over:
     pygame.draw.rect(screen,WHITE,passButton)
     pygame.draw.rect(screen,BLACK,passButton,2)
     screen.blit(passText,(668,535))
+
+    #PlayRright button
+    PlayRrightText = font.render('Jugar derecha',True,BLACK)
+    PlayRrightButton = pygame.Rect(450,520,180,50)
+    pygame.draw.rect(screen,WHITE,PlayRrightButton)
+    pygame.draw.rect(screen,BLACK,PlayRrightButton,2)
+    screen.blit(PlayRrightText,(468,535))
+
+    #PlayLeft button
+    PlayLeftText = font.render('Jugar izquierda',True,BLACK)
+    PlayLeftButton = pygame.Rect(250,520,190,50)
+    pygame.draw.rect(screen,WHITE,PlayLeftButton)
+    pygame.draw.rect(screen,BLACK,PlayLeftButton,2)
+    screen.blit(PlayLeftText,(268,535))
 
     #Win and lose labels
     winLabel = font.render("GANASTE!!!",True,(255,255,255))
