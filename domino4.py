@@ -56,6 +56,9 @@ board = []
 turn = bool
 yourScore = 0
 rivalScore = 0
+gameWin = False
+gameLose = False
+round = 0
 
 #set up Serial Conection
 ser = serial.Serial()
@@ -131,35 +134,83 @@ while not game_over:
                             player1_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
+                            round+=1
                             turn = False
                         elif domino[0] == board[-1][1]:
                             board.append(domino)
                             player1_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
+                            round+=1
                             turn = False
                         elif domino[1] == board[-1][1]:
                             board.append((domino[1], domino[0]))
                             player1_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
+                            round+=1
                             turn = False
                         elif domino[0] == board[0][0]:
                             board.insert(0, (domino[1], domino[0]))
                             player1_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
+                            round+=1
                             turn = False
                         elif domino[1] == board[0][0]:
                             board.insert(0, domino)
                             player1_hand.remove(domino)
                             writeText('your turn')
                             writeAll()
+                            round+=1
                             turn = False
+                #Pass button logic
                 if passButton.collidepoint(pos):
                     writeText('your turn')
                     writeAll()
                     turn = False
+                #Restart Logic
+                if (gameLose or gameWin) and restartButton.collidepoint(pos):
+                    #count points
+                    acum=0
+                    if gameWin:
+                        for i,domino in enumerate(player2_hand):
+                            acum=acum+domino[0]+domino[1]
+                        yourScore=yourScore+acum
+                        for i,domino in enumerate(player4_hand):
+                            acum=acum+domino[0]+domino[1]
+                        yourScore=yourScore+acum
+                    else:
+                        for i,domino in enumerate(player1_hand):
+                            acum=acum+domino[0]+domino[1]
+                        rivalScore=rivalScore+acum
+                        for i,domino in enumerate(player3_hand):
+                            acum=acum+domino[0]+domino[1]
+                        yourScore=yourScore+acum
+                    round=0
+                    writeText('scores')
+                    writeText(str(yourScore))
+                    writeText(str(rivalScore))
+                    #set game again
+                    dominoes = []
+                    for i in range(7):
+                        for j in range(i, 7):
+                            dominoes.append((i, j))
+
+                    random.shuffle(dominoes)
+                    player_hand = dominoes[:7]
+                    computer_hand = dominoes[7:14]
+                    board = [dominoes[14]]
+                    dominoes = dominoes[15:28]
+                    writeText('your turn')
+                    writeAll()
+                    turn = False
+                    gameWin = False
+                    gameLose = False 
+                #quit logic                   
+                if (gameLose or gameWin) and quitButton.collidepoint(pos):
+                    game_over = True
+                    pygame.quit()
 
     # draw the board
     screen.fill(GREEN)
@@ -217,31 +268,35 @@ while not game_over:
     loseLabel = font.render("PERDISTE...",True,(255,25,255))
 
     #Check game over
-    if len(player1_hand) ==0:
+    if len(player1_hand)==0 or len(player3_hand)==0:
         screen.blit(winLabel,(350,30))
-        game_over = True
-    if len(player3_hand) ==0:
-        screen.blit(winLabel,(350,30))
-        game_over = True
-    if len(player2_hand) ==0:
+        gameWin = True
+    if len(player2_hand) ==0 or len(player4_hand):
         screen.blit(loseLabel,(350,30))
-        game_over = True
-    if len(player4_hand) ==0:
-        screen.blit(loseLabel,(350,30))
-        game_over = True
+        gameLose = False
 
     yourScoreText = font.render('Tus puntos: '+str(yourScore),True,BLACK)
     rivalScoreText = font.render('Puntos del rival: '+str(yourScore),True,BLACK)
     screen.blit(yourScoreText,(600,10))
     screen.blit(rivalScoreText,(600,30))
 
+    #show restart window
+    if gameWin or gameLose:  
+        pygame.draw.rect(screen,WHITE,window)
+        pygame.draw.rect(screen,BLUE,window,2)
+        pygame.draw.rect(screen,BLUE,restartButton)
+        pygame.draw.rect(screen,RED,quitButton)
+        screen.blit(restartText,(275,210))
+        screen.blit(yesText,(310,290))
+        screen.blit(noText,(460,290))
+
     # update the display
     pygame.display.update()
 
     #Receive game information
-    if not turn:
+    if (not turn)  or gameWin or gameLose:
         text=read()
-        if text == 'your turn' or text == 'update':
+        if text == 'your turn' or text == ('update'+str(round)):
             
             if text == 'your turn': 
                 turn=True
@@ -276,7 +331,7 @@ while not game_over:
                         player3_handReady = True
                 if player1_handReady and player2_handReady and player3_handReady and player4_handReady and boardReady:
                     ready=True
-                    writeText('update')
+                    writeText('update'+str(round))
                     writeAll()
 
     # limit the frame rate

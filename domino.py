@@ -196,6 +196,7 @@ while not game_over:
                 #quit logic                   
                 if (gameLose or gameWin) and quitButton.collidepoint(pos):
                     game_over = True
+                    pygame.quit()
 
     # draw the board
     screen.fill(GREEN)
